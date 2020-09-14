@@ -12,19 +12,20 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.order(:rating).select(:rating).map(&:rating).uniq
-    
+
+    # check parameter first, update session using params. If no session and no params, use last session.
     if params[:ratings]
-      @checked_ratings = params[:ratings].keys
-    else
-      @checked_ratings = @all_ratings
+      session[:ratings] = (params[:ratings].is_a?(Hash)) ? params[:ratings].keys : params[:ratings]
+    elsif session[:ratings] == nil
+      session[:ratings] = @all_ratings
     end
     
-    # @movies = Movie.all
     if params[:sort]
-      @movies = Movie.order(params[:sort])
-    else
-      @movies = Movie.where(:rating => @checked_ratings)
+      session[:sort] = params[:sort]
     end
+    
+    @movies = (session[:sort]==nil) ? Movie.where(:rating => session[:ratings]) : Movie.order(session[:sort].to_sym).where(:rating => session[:ratings])
+    
   end
 
   def new
