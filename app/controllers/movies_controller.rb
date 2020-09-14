@@ -12,12 +12,15 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.order(:rating).select(:rating).map(&:rating).uniq
+    tmp_bool = false
 
     # check parameter first, update session using params. If no session and no params, use last session.
     if params[:ratings]
       session[:ratings] = (params[:ratings].is_a?(Hash)) ? params[:ratings].keys : params[:ratings]
     elsif session[:ratings] == nil
       session[:ratings] = @all_ratings
+    else
+      tmp_bool = true # do the redirect
     end
     
     if params[:sort]
@@ -25,6 +28,13 @@ class MoviesController < ApplicationController
     end
     
     @movies = (session[:sort]==nil) ? Movie.where(:rating => session[:ratings]) : Movie.order(session[:sort].to_sym).where(:rating => session[:ratings])
+    
+    if tmp_bool
+      flash.keep
+      redirect_to movies_path(:sort => session[:sort], :ratings => session[:ratings])
+    else
+      @movies = (session[:sort]==nil) ? Movie.where(:rating => session[:ratings]) : Movie.order(session[:sort].to_sym).where(:rating => session[:ratings])
+    end
     
   end
 
